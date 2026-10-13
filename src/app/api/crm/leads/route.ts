@@ -1,11 +1,28 @@
 import { NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
 
-const prisma = new PrismaClient();
+const globalForPrisma = globalThis as unknown as { prisma: PrismaClient };
+const prisma = globalForPrisma.prisma || new PrismaClient({
+  log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
+});
+if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
+
+// CORS headers para permitir peticiones desde Caso 1 (Radar Leads)
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type',
+};
+
+function corsResponse(data: any, status = 200) {
+  return NextResponse.json(data, { status, headers: corsHeaders });
+}
 
 // Endpoint para importar lead de Caso 1 (Radar Leads)
 export async function POST(request: Request) {
   try {
+    console.log("DATABASE_URL exists:", !!process.env.DATABASE_URL);
+    console.log("DATABASE_URL starts with:", process.env.DATABASE_URL?.substring(0, 30));
     const body = await request.json();
 
     const {
@@ -22,9 +39,9 @@ export async function POST(request: Request) {
     } = body;
 
     if (!id || !displayName || !phoneNumber) {
-      return NextResponse.json(
+      return corsResponse(
         { error: "Datos requeridos: id, displayName, phoneNumber" },
-        { status: 400 }
+        400
       );
     }
 
@@ -66,26 +83,37 @@ export async function POST(request: Request) {
       },
     });
 
-    return NextResponse.json({
+    return corsResponse({
       success: true,
       message: "Lead importado exitosamente al CRM",
       contacto,
       conversacion,
       leadCaso1,
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error importando lead al CRM:", error);
-    return NextResponse.json(
-      { error: "Error interno al importar lead" },
-      { status: 500 }
+    console.error("Error message:", error?.message);
+    console.error("Error code:", error?.code);
+    console.error("Error meta:", error?.meta);
+    console.error("Error stack:", error?.stack);
+    return corsResponse(
+      { error: "Error interno al importar lead", details: error?.message || String(error), code: error?.code, meta: error?.meta, stack: error?.stack },
+      500
     );
   }
 }
 
 // Endpoint GET para verificar estado
 export async function GET(request: Request) {
-  return NextResponse.json({
+  return corsResponse({
     status: "online",
     message: "Endpoint /api/crm/leads/import activo",
+    version: "2.1-debug",
+    timestamp: new Date().toISOString(),
   });
+}
+
+// Manejar preflight OPTIONS
+export async function OPTIONS() {
+  return new NextResponse(null, { status: 204, headers: corsHeaders });
 }
