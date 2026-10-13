@@ -7,7 +7,7 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-# Lead recibido de Caso 1 (Radar Leads)
+// Lead recibido de Caso 1 (Radar Leads)
 model LeadCaso1 {
   id          String   @id @default(uuid())
   displayName String
@@ -28,7 +28,7 @@ model LeadCaso1 {
   updatedAt   DateTime  @updatedAt
 }
 
-# Contacto creado en el CRM
+// Contacto creado en el CRM
 model Contacto {
   id          String   @id @default(uuid())
   leadId      String   @unique
@@ -41,7 +41,7 @@ model Contacto {
   actualizadoEn DateTime @updatedAt
 }
 
-# Conversación WhatsApp
+// Conversación WhatsApp
 model Conversacion {
   id               String   @id @default(uuid())
   contactoId       String   @unique
@@ -53,7 +53,7 @@ model Conversacion {
   actualizadoEn    DateTime @updatedAt
 }
 
-# Cita agendada
+// Cita agendada
 model Cita {
   id              String   @id @default(uuid())
   conversacionId  String?
@@ -66,7 +66,7 @@ model Cita {
   actualizadoEn   DateTime @updatedAt
 }
 
-# Configuración del negocio
+// Configuración del negocio
 model ConfigNegocio {
   id            String   @id @default(uuid())
   numeroWhatsapp String   @unique
