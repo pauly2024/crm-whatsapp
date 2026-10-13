@@ -1,0 +1,76 @@
+generator client {
+  provider = "sqlite"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+# Lead recibido de Caso 1 (Radar Leads)
+model LeadCaso1 {
+  id          String   @id @default(uuid())
+  displayName String
+  formattedAddress String
+  phoneNumber String
+  email       String?
+  website     String?
+  rating      Float?
+  reviewCount Int?
+  googleMapsUri String?
+  businessStatus String?
+  opportunityScore Float?
+  packageType String?   // basico, pro, premium
+  packagePrice String?
+  siteUrl     String?   // URL del sitio generado en Caso 2
+  status      String    @default("Nuevo")
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+# Contacto creado en el CRM
+model Contacto {
+  id          String   @id @default(uuid())
+  leadId      String   @unique
+  nombre      String
+  telefono    String
+  email       String?
+  empresa     String?
+  fuente      String    @default("Radar Leads Caso 1")
+  creadoEn    DateTime @default(now())
+  actualizadoEn DateTime @updatedAt
+}
+
+# Conversación WhatsApp
+model Conversacion {
+  id               String   @id @default(uuid())
+  contactoId       String   @unique
+  numeroWhatsapp   String
+  qrCode         String?
+  estado           String   @default("pendiente") // pendiente, conectada, error
+  ultimaMensaje    DateTime?
+  createdAt        DateTime @default(now())
+  actualizadoEn    DateTime @updatedAt
+}
+
+# Cita agendada
+model Cita {
+  id              String   @id @default(uuid())
+  conversacionId  String?
+  clienteNombre   String
+  clienteTelefono String
+  servicio        String
+  fechaHora       DateTime
+  estado          String   @default("pendiente") // pendiente, confirmada, cancelada, realizada
+  createdAt       DateTime @default(now())
+  actualizadoEn   DateTime @updatedAt
+}
+
+# Configuración del negocio
+model ConfigNegocio {
+  id            String   @id @default(uuid())
+  numeroWhatsapp String   @unique
+  nombreNegocio  String
+  creadoEn      DateTime @default(now())
+  actualizadoEn DateTime @updatedAt
+}
